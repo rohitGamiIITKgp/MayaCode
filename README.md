@@ -1,42 +1,115 @@
-# Welcome to your Expo app 👋
+# MayaCode - Learn to Code App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+MayaCode is a modern mobile application designed to help users learn programming through interactive courses, coding challenges, and practice exercises. The app provides a comprehensive learning experience with features like course tracking, progress monitoring, and a supportive community.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Authentication**
+  - User registration and login
+  - Secure authentication system
+  - Profile management
 
+- **Learning Experience**
+  - Structured courses in various programming languages
+  - Interactive coding challenges
+  - Progress tracking
+  - Course completion certificates
+
+- **Practice Section**
+  - Coding challenges with different difficulty levels
+  - Real-time code editor
+  - Mini projects
+  - Daily challenges
+
+- **User Profile**
+  - Learning statistics
+  - Achievement tracking
+  - Course progress
+  - Settings management
+
+## Tech Stack
+
+- React Native
+- TypeScript
+- Expo Router
+- NativeWind (Tailwind CSS)
+- FontAwesome Icons
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- Expo CLI
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/mayacode.git
+   cd mayacode
+   ```
+
+2. Install dependencies:
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-2. Start the app
-
+3. Start the development server:
    ```bash
-   npx expo start
+   npm start
+   # or
+   yarn start
    ```
 
-In the output, you'll find options to open the app in a
+4. Run on your device:
+   - Scan the QR code with the Expo Go app (Android) or Camera app (iOS)
+   - Press 'a' to run on Android emulator
+   - Press 'i' to run on iOS simulator
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Project Structure
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+mayacode/
+├── app/
+│   ├── (auth)/
+│   │   ├── login.tsx
+│   │   └── signup.tsx
+│   ├── (tabs)/
+│   │   ├── index.tsx
+│   │   ├── learn.tsx
+│   │   ├── practice.tsx
+│   │   └── profile.tsx
+│   └── _layout.tsx
+├── assets/
+│   ├── images/
+│   └── fonts/
+├── types/
+│   └── index.ts
+├── components/
+├── constants/
+└── utils/
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Contributing
 
-## Learn more
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Design inspired by ChiltelApp
+- Icons provided by FontAwesome
 To learn more about developing your project with Expo, look at the following resources:
 
 - [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).

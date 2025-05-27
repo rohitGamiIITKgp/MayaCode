@@ -1,75 +1,96 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import Header from '@/components/Header';
+import { HelpPostCard } from '@/components/HelpPostCard';
+import { StoryCard } from '@/components/StoryCard';
+import { useRouter } from 'expo-router';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, useColorScheme, View, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const featuredCourses = [
+  {
+    id: 1,
+    title: 'Python Basics',
+    description: 'Learn Python programming from scratch',
+    image: require('@/assets/python.svg'),
+    progress: 0,
+  },
+  {
+    id: 2,
+    title: 'Web Development',
+    description: 'Master HTML, CSS, and JavaScript',
+    image: require('@/assets/web.svg'),
+    progress: 0,
+  },
+  {
+    id: 3,
+    title: 'Data Structures',
+    description: 'Essential data structures and algorithms',
+    image: require('@/assets/ds.svg'),
+    progress: 0,
+  },
+];
 
 export default function HomeScreen() {
+  const colorScheme = useColorScheme();
+  const isDark = colorScheme === 'dark';
+  const router = useRouter();
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
+    <View style={{ flex: 1, backgroundColor: '#FDFDE3' }}>
+      <Header />
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.greeting}>Hello! What should we do today?</Text>
+
+        <HelpPostCard
+          title="Help posts"
+          description="Ask and give help between community members and build lasting connections"
+          imageSource={require('@/assets/images/help-posts.png')}
+          onPress={() => router.push('/help-and-ask')}
         />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+
+        <StoryCard
+          title="Stories"
+          description="Share your helping moments and inspire others to do more! Get inspired by others."
+          imageSource={require('@/assets/images/stories.png')}
+          onPress={() => router.push('/stories')}
+        />
+
+        {/* You can add more sections here for featured courses or other content */}
+
+        <TouchableOpacity style={styles.helpPostsButton} onPress={() => router.push('/helpAndAsk')}>
+          <Text style={styles.helpPostsButtonText}>Go to help posts</Text>
+          <Ionicons name="add-outline" size={24} color="#fff" style={{ marginLeft: 10 }} />
+        </TouchableOpacity>
+
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    padding: 15,
+  },
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#2C3E50',
+  },
+  helpPostsButton: {
+    backgroundColor: '#3A6F4C', // Green color from image
+    padding: 12, // Reduced padding
+    borderRadius: 16,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center', // Center content horizontally
+    flexDirection: 'row', // Arrange children in a row
+    marginTop: 15, // Adjusted margin top
+    marginHorizontal: 20, // Adjusted horizontal margin
+    alignSelf: 'center', // Center the button and size it to content
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  helpPostsButtonText: {
+    color: '#fff',
+    fontSize: 16, // Reduced font size
+    fontWeight: 'bold',
   },
 });
