@@ -7,7 +7,7 @@ import Toast from 'react-native-toast-message';
 // Appwrite Configuration
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1')
-    .setProject('67e02e570019ead95b40')
+    .setProject(process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID)
 
 export const account = new Account(client);
 

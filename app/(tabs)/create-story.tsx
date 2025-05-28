@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image, ActivityIndicator, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker'; // ✅ Import ImagePicker
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '@/context/AuthContext';
 import Toast from 'react-native-toast-message';
 import { postService } from '@/services/postService';
@@ -12,7 +12,6 @@ import { PostType } from '@/models/Post';
 const CreateStoryScreen = () => {
   const router = useRouter();
   const { user } = useAuth();
-  const selectedType = 'Story';
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -23,16 +22,14 @@ const CreateStoryScreen = () => {
   };
 
   const handleSelectPhoto = async () => {
-    // Ask for permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permission required', 'Please grant camera roll permissions from settings to select a photo.');
       return;
     }
 
-    // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       quality: 1,
     });
@@ -46,68 +43,105 @@ const CreateStoryScreen = () => {
     setImageUri(null);
   };
 
-  const handleSubmit = async () => {
-      if (!title || !description || !user) {
-        Toast.show({
-          type: 'info',
-          text1: 'Missing Information',
-          text2: 'Please select a type, title, and provide description.',
-        });
-        return;
-      }
-  
-      setIsLoading(true);
-      try {
-        const imageUrls = images.length > 0 ? images : undefined;
-  
-        const newPost = await postService.createPost(
-          user.phone,
-          selectedType,
-          title,
-          description,
-          {
-            images: imageUrls,
-          }
-        );
-  
-        if (newPost) {
-          Toast.show({
-            type: 'success',
-            text1: 'Post Created!',
-            text2: `Your ${selectedType} has been created successfully.`,
-          });
-          setTitle('');
-          setDescription('');
-          setImageUri([]);
-          
-        } else {
-           Toast.show({
-            type: 'error',
-            text1: 'Creation Failed',
-            text2: 'Could not create post. Please try again.',
-          });
+  const handleCreateAndPublish = async () => {
+    if (!user?.phone) {
+      console.log('No phone number found in user session:', user);
+      Toast.show({
+        type: 'error',
+        text1: 'Authentication Error',
+        text2: 'Please sign in again to create a story.',
+        position: 'top',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 50,
+      });
+      return;
+    }
+
+    if (!title.trim() || !description.trim()) {
+      Toast.show({
+        type: 'info',
+        text1: 'Missing Information',
+        text2: 'Please provide a title and description.',
+        position: 'top',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 50,
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    console.log('Creating story with data:', {
+      phone: user.phone,
+      type: 'Story',
+      title: title.trim(),
+      content: description.trim(),
+      images: imageUri ? [imageUri] : undefined
+    });
+
+    try {
+      const newStory = await postService.createPost(
+        user.phone,
+        'Story',
+        title.trim(),
+        description.trim(),
+        {
+          images: imageUri ? [imageUri] : undefined,
         }
-        
-      } catch (error: any) {
-        console.error('Error creating post:', error);
+      );
+
+      console.log('Story creation response:', newStory);
+
+      if (newStory) {
+        Toast.show({
+          type: 'success',
+          text1: 'Story Created!',
+          text2: 'Your story has been published successfully.',
+          position: 'top',
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 50,
+        });
+        setTitle('');
+        setDescription('');
+        setImageUri(null);
+        router.back();
+      } else {
+        console.error('Story creation failed - no response data');
         Toast.show({
           type: 'error',
-          text1: 'Creation Error',
-          text2: error.message || 'An unexpected error occurred.',
+          text1: 'Creation Failed',
+          text2: 'Could not publish story. Please try again.',
+          position: 'top',
+          visibilityTime: 4000,
+          autoHide: true,
+          topOffset: 50,
         });
-      } finally {
-        setIsLoading(false);
-        router.back();
       }
-    };
 
-  const handleCancel = () => {
-    router.back();
+    } catch (error: any) {
+      console.error('Error creating story:', {
+        error,
+        message: error.message,
+        stack: error.stack
+      });
+      Toast.show({
+        type: 'error',
+        text1: 'Creation Error',
+        text2: error.message || 'An unexpected error occurred.',
+        position: 'top',
+        visibilityTime: 4000,
+        autoHide: true,
+        topOffset: 50,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Same content as before — no changes needed in UI */}
       <View style={styles.header}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
@@ -115,38 +149,40 @@ const CreateStoryScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.container}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Create a new story</Text>
 
         <View style={styles.warningBox}>
           <Ionicons name="warning-outline" size={24} color="#F57C00" />
           <View style={styles.warningTextContainer}>
-            <Text style={styles.warningTitle}>
-              Stories are only for sharing your experiences about helping or volunteering.
-            </Text>
+            <Text style={styles.warningTitle}>Stories are only for sharing your experiences about helping or volunteering.</Text>
             <Text style={styles.warningMessage}>
               Do not ask for help, post unrelated stories or in other ways try to circumvent above point. Your story will not be published if you do so.
             </Text>
           </View>
         </View>
 
-        <View style={styles.imagePlaceholder}>
+        <View style={styles.imagePreviewContainer}>
           {imageUri ? (
-            <Image source={{ uri: imageUri }} style={styles.selectedImage} />
+            <Image source={{ uri: imageUri }} style={styles.previewImage} />
           ) : (
             <Text style={styles.imagePlaceholderText}>Photo will appear here</Text>
           )}
         </View>
 
-        <TouchableOpacity style={styles.photoButton} onPress={handleSelectPhoto}>
-          <Ionicons name="camera-outline" size={24} color="#007AFF" />
-          <Text style={styles.photoButtonText}>Select a photo</Text>
+        <TouchableOpacity style={styles.imageButton} onPress={handleSelectPhoto} disabled={isLoading}>
+          <Ionicons name="camera-outline" size={24} color={isLoading ? '#B0BEC5' : '#007AFF'} />
+          <Text style={[styles.imageButtonText, isLoading && { opacity: 0.5 }]}>
+            {imageUri ? 'Change Image' : 'Add Image (Optional)'}
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDeletePhoto} disabled={!imageUri}>
-          <Ionicons name="trash-outline" size={24} color="#E53935" />
-          <Text style={[styles.deleteButtonText, !imageUri && styles.disabledButtonText]}>Delete</Text>
-        </TouchableOpacity>
+        {imageUri && (
+          <TouchableOpacity style={styles.removeImageButton} onPress={handleDeletePhoto} disabled={isLoading}>
+            <Ionicons name="trash-outline" size={24} color={isLoading ? '#EF9A9A' : '#E53935'} />
+            <Text style={[styles.removeImageButtonText, isLoading && { opacity: 0.5 }]}>Remove Image</Text>
+          </TouchableOpacity>
+        )}
 
         <Text style={styles.inputLabel}>Title</Text>
         <TextInput
@@ -154,6 +190,7 @@ const CreateStoryScreen = () => {
           placeholder="Enter title"
           value={title}
           onChangeText={setTitle}
+          editable={!isLoading}
         />
 
         <Text style={styles.inputLabel}>Description</Text>
@@ -164,18 +201,30 @@ const CreateStoryScreen = () => {
           onChangeText={setDescription}
           multiline
           numberOfLines={4}
+          editable={!isLoading}
         />
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
-            <Text style={styles.buttonText}>Cancel</Text>
+
+        <View style={styles.buttonContainerInner}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleBack}
+            disabled={isLoading}
+          >
+            <Text style={[styles.buttonText, { color: '#000' }, isLoading && { opacity: 0.5 }]}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.publishButton} onPress={handleSubmit}>
-            <Text style={[styles.buttonText, styles.publishButtonText]}>Create and publish</Text>
+          <TouchableOpacity
+            style={[styles.button, styles.publishButton]}
+            onPress={handleCreateAndPublish}
+            disabled={isLoading || !title.trim() || !description.trim()}
+          >
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={[styles.buttonText, styles.publishButtonText]}>Create and Publish</Text>
+            )}
           </TouchableOpacity>
         </View>
-
       </ScrollView>
-
     </SafeAreaView>
   );
 };
@@ -183,7 +232,7 @@ const CreateStoryScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FDFDE3', // Light background color
+    backgroundColor: '#FDFDE3',
   },
   header: {
     flexDirection: 'row',
@@ -192,7 +241,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
-    backgroundColor: '#FDFDE3', // Match background
+    backgroundColor: '#FDFDE3',
   },
   backButton: {
     flexDirection: 'row',
@@ -205,8 +254,10 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
-    marginBottom: 80,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 24,
@@ -216,138 +267,118 @@ const styles = StyleSheet.create({
   },
   warningBox: {
     flexDirection: 'row',
-    backgroundColor: '#FFF9C4', // Light yellow background
+    backgroundColor: '#FFF9C4',
     borderLeftWidth: 4,
-    borderColor: '#FBC02D', // Darker yellow border
+    borderColor: '#FBC02D',
     padding: 15,
     borderRadius: 4,
     marginBottom: 20,
     alignItems: 'flex-start',
   },
   warningTextContainer: {
-    marginLeft: 10,
     flex: 1,
+    marginLeft: 10,
   },
   warningTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#F57C00',
     marginBottom: 5,
-    color: '#555',
   },
   warningMessage: {
     fontSize: 14,
-    color: '#777',
+    color: '#795548',
   },
-  imagePlaceholder: {
-    width: '100%',
-    height: 200,
-    backgroundColor: '#ECEFF1', // Light grey background
-    borderRadius: 8,
-    justifyContent: 'center',
+  imagePreviewContainer: {
     alignItems: 'center',
     marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#CFD8DC', // Light border
-    borderStyle: 'dashed',
+  },
+  previewImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
   },
   imagePlaceholderText: {
     fontSize: 16,
-    color: '#78909C', // Grey text color
+    color: '#78909C',
   },
-  selectedImage: {
-     width: '100%',
-     height: '100%',
-     borderRadius: 8,
-  },
-  photoButton: {
+  imageButton: {
     flexDirection: 'row',
-    backgroundColor: '#E3F2FD', // Light blue background
+    backgroundColor: '#E3F2FD',
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#BBDEFB', // Light blue border
+    borderColor: '#BBDEFB',
   },
-  photoButtonText: {
-    color: '#0D47A1', // Dark blue text
+  imageButtonText: {
+    color: '#0D47A1',
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 10,
   },
-  deleteButton: {
-    flexDirection: 'row',
-    backgroundColor: '#FFEBEE', // Light red background
-    padding: 15,
+  removeImageButton: {
+    marginTop: 10,
+    backgroundColor: '#FFEBEE',
+    padding: 10,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FFCDD2', // Light red border
+    borderColor: '#FFCDD2',
+    flexDirection: 'row',
   },
-  deleteButtonText: {
-    color: '#C62828', // Dark red text
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 10,
-  },
-  disabledButtonText: {
-    opacity: 0.5,
-  },
-  inputLabel: {
+  removeImageButtonText: {
+    color: '#C62828',
     fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 5,
+  },
+  inputLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
     marginBottom: 5,
-    color: '#2C3E50',
   },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 10,
+    borderRadius: 10,
+    padding: 15,
     marginBottom: 15,
     fontSize: 16,
-    backgroundColor: '#fff',
   },
   descriptionInput: {
     height: 100,
     textAlignVertical: 'top',
   },
-  buttonContainer: {
+  buttonContainerInner: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    backgroundColor: '#FDFDE3', // Match background
+    justifyContent: 'space-between',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  button: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginHorizontal: 5,
   },
   cancelButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
+    backgroundColor: '#f0f0f0',
   },
   publishButton: {
-    flex: 1,
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginLeft: 10,
-    backgroundColor: '#4CAF50', // Green color
+    backgroundColor: '#4CAF50',
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000', // Default text color
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#000',
   },
   publishButtonText: {
-    color: '#fff', // White text for publish button
+    color: '#fff',
   },
 });
 

@@ -2,6 +2,11 @@ import { ObjectId } from 'mongodb';
 
 export type PostType = 'Offer Help' | 'Ask for Help' | 'Story';
 
+export interface Location {
+  latitude: number;
+  longitude: number;
+}
+
 export interface Post {
   _id?: ObjectId;
   phone: string;
@@ -9,7 +14,7 @@ export interface Post {
   title: string;
   content: string;
   images?: string[];
-  location?: string;
+  location?: Location;
   tags?: string[];
   status: 'active' | 'completed' | 'archived';
   views: number;
@@ -48,4 +53,18 @@ export const updatePost = (post: Post, updates: Partial<Post>): Post => {
     ...updates,
     updatedAt: new Date()
   };
+};
+
+// Helper function to validate post data
+export const validatePost = (post: Post): { isValid: boolean; error?: string } => {
+  if (!post.title.trim()) {
+    return { isValid: false, error: 'Title is required' };
+  }
+  if (!post.content.trim()) {
+    return { isValid: false, error: 'Content is required' };
+  }
+  if (post.type !== 'Story' && !post.location) {
+    return { isValid: false, error: 'Location is required for Offer Help and Ask for Help posts' };
+  }
+  return { isValid: true };
 }; 

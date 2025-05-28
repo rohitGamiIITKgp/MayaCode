@@ -67,6 +67,13 @@ export default function ProfileScreen() {
       if (user) {
         setIsLoadingProfile(true);
         try {
+          // Check if phone number exists in Appwrite session
+          if (!user.phone) {
+            console.log('No phone number found in Appwrite session');
+            router.replace('/login');
+            return;
+          }
+
           let profile = await userService.getUserProfile();
           
           if (!profile) {

@@ -4,10 +4,10 @@
     "slug": "mayacode",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/MayaCode-logo.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash-icon.png",
+      "image": "./assets/images/MayaCode-logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,21 +16,35 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mayacode.app"
+      "bundleIdentifier": "com.mayacode.app",
+      "config": {
+        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+      }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/MayaCode-logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mayacode.app"
+      "package": "com.mayacode.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        }
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/MayaCode-logo.png"
     },
     "scheme": "mayacode",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow MayaCode to use your location."
+        }
+      ]
     ]
   }
 }

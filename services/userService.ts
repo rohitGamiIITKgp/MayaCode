@@ -8,7 +8,7 @@ const getPhoneFromSession = async (): Promise<string | null> => {
   try {
     const session = await account.getSession('current');
     if (!session) {
-      console.error('❌ No session found');
+      console.error('No session found');
       return null;
     }
 
@@ -16,13 +16,13 @@ const getPhoneFromSession = async (): Promise<string | null> => {
     const phone = user?.phone;
 
     if (!phone) {
-      console.error('❌ No phone number found in user details');
+      console.error('No phone number found in user details');
       return null;
     }
 
     return phone;
   } catch (error) {
-    console.error('❌ Error getting session:', error);
+    console.error('Error getting session:', error);
     return null;
   }
 };
@@ -43,7 +43,7 @@ const getRequest = async <T>(endpoint: string): Promise<T> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
+      console.error('Error response:', errorText);
       throw new Error(errorText || `Request failed with status ${response.status}`);
     }
 
@@ -51,9 +51,21 @@ const getRequest = async <T>(endpoint: string): Promise<T> => {
     console.log('✅ Response data:', data);
     return data as T;
   } catch (error) {
-    console.error('❌ GET request error:', error);
+    console.error('GET request error:', error);
     throw error;
   }
+};
+
+const handleApiResponse = async <T>(response: Response): Promise<T> => {
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('Error response:', errorText);
+    throw new Error(errorText || `Request failed with status ${response.status}`);
+  }
+
+  const responseData = await response.json();
+  console.log('Response data:', responseData);
+  return responseData as T;
 };
 
 // Simple POST request
@@ -73,15 +85,15 @@ const postRequest = async <T>(endpoint: string, data: any): Promise<T> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
+      console.error('Error response:', errorText);
       throw new Error(errorText || `Request failed with status ${response.status}`);
     }
 
     const responseData = await response.json();
-    console.log('✅ Response data:', responseData);
+    console.log('Response data:', responseData);
     return responseData as T;
   } catch (error) {
-    console.error('❌ POST request error:', error);
+    console.error('POST request error:', error);
     throw error;
   }
 };
@@ -103,7 +115,7 @@ const putRequest = async <T>(endpoint: string, data: any): Promise<T> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
+      console.error('Error response:', errorText);
       throw new Error(errorText || `Request failed with status ${response.status}`);
     }
 
@@ -111,7 +123,7 @@ const putRequest = async <T>(endpoint: string, data: any): Promise<T> => {
     console.log('✅ Response data:', responseData);
     return responseData as T;
   } catch (error) {
-    console.error('❌ PUT request error:', error);
+    console.error('PUT request error:', error);
     throw error;
   }
 };
@@ -132,13 +144,13 @@ const deleteRequest = async (endpoint: string): Promise<void> => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error response:', errorText);
+      console.error('Error response:', errorText);
       throw new Error(errorText || `Request failed with status ${response.status}`);
     }
 
     console.log('✅ Delete successful');
   } catch (error) {
-    console.error('❌ DELETE request error:', error);
+    console.error('DELETE request error:', error);
     throw error;
   }
 };
@@ -150,7 +162,7 @@ export const testConnection = async (): Promise<{ success: boolean; data?: any; 
     const data = await getRequest<any>('/users');
     return { success: true, data };
   } catch (error) {
-    console.error('❌ Network error:', error);
+    console.error('Network error:', error);
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error' 
@@ -180,7 +192,7 @@ export const userService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
+        console.error('Error response:', errorText);
         throw new Error(errorText || `Request failed with status ${response.status}`);
       }
 
@@ -188,9 +200,9 @@ export const userService = {
       console.log('✅ Users data:', data);
       return data as UserProfile[];
     } catch (error) {
-      console.error('❌ getAllUsers error:', error);
+      console.error('getAllUsers error:', error);
       if (error instanceof Error) {
-        console.error('❌ Error details:', {
+        console.error('Error details:', {
           message: error.message,
           stack: error.stack,
           name: error.name
@@ -209,7 +221,8 @@ export const userService = {
       console.log('📱 Phone from session:', phone);
       
       if (!phone) {
-        throw new Error('No phone number found in session');
+        console.error('No phone number found in session');
+        return null;
       }
 
       const response = await fetch(
@@ -228,7 +241,7 @@ export const userService = {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
+        console.error('Error response:', errorText);
         throw new Error(errorText || `Request failed with status ${response.status}`);
       }
 
@@ -236,7 +249,7 @@ export const userService = {
       console.log('✅ User profile data:', data);
       return data as UserProfile;
     } catch (error) {
-      console.error('❌ getUserProfile error:', error);
+      console.error('getUserProfile error:', error);
       throw error;
     }
   },
@@ -248,7 +261,7 @@ export const userService = {
       
       const phone = await getPhoneFromSession();
       if (!phone) {
-        console.error('❌ No phone number found in session');
+        console.error('No phone number found in session');
         return null;
       }
 
@@ -260,7 +273,7 @@ export const userService = {
 
       return await postRequest<UserProfile>(`/users/phone/${phone}`, profileData);
     } catch (error) {
-      console.error('❌ Error creating user profile:', error);
+      console.error('Error creating user profile:', error);
       return null;
     }
   },
@@ -270,7 +283,7 @@ export const userService = {
     try {
       const phone = await getPhoneFromSession();
       if (!phone) {
-        console.error('❌ No phone number found in session');
+        console.error('No phone number found in session');
         return null;
       }
 
@@ -288,13 +301,10 @@ export const userService = {
         lastActive: new Date().toISOString()
       };
 
-      console.log('📤 Update Profile Request:', {
-        url: `${API_URL}/users/phone/${phone}`,
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: formattedUpdates
+      console.log('Update Profile Request:', {
+        phone,
+        updates,
+        apiUrl: API_URL
       });
 
       const response = await fetch(
@@ -303,7 +313,6 @@ export const userService = {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json'
           },
           body: JSON.stringify(formattedUpdates)
         }
@@ -316,7 +325,7 @@ export const userService = {
       console.log('📥 Raw response:', responseText);
 
       if (!response.ok) {
-        console.error('❌ Error response:', responseText);
+        console.error('Error response:', responseText);
         throw new Error(`Request failed with status ${response.status}: ${responseText}`);
       }
 
@@ -325,15 +334,15 @@ export const userService = {
         data = JSON.parse(responseText);
         console.log('✅ Parsed response data:', data);
       } catch (parseError) {
-        console.error('❌ Error parsing response:', parseError);
+        console.error('Error parsing response:', parseError);
         throw new Error('Invalid JSON response from server');
       }
 
       return data as UserProfile;
     } catch (error) {
-      console.error('❌ updateUserProfile error:', error);
+      console.error('updateUserProfile error:', error);
       if (error instanceof Error) {
-        console.error('❌ Error details:', {
+        console.error('Error details:', {
           message: error.message,
           name: error.name
         });
@@ -347,14 +356,14 @@ export const userService = {
     try {
       const phone = await getPhoneFromSession();
       if (!phone) {
-        console.error('❌ No phone number found in session');
+        console.error('No phone number found in session');
         return false;
       }
 
       await deleteRequest(`/users/phone/${phone}`);
       return true;
     } catch (error) {
-      console.error('❌ Error deleting user profile:', error);
+      console.error('Error deleting user profile:', error);
       return false;
     }
   },
@@ -364,13 +373,13 @@ export const userService = {
     try {
       const phone = await getPhoneFromSession();
       if (!phone) {
-        console.error('❌ No phone number found in session');
+        console.error('No phone number found in session');
         return null;
       }
 
       return await putRequest<UserProfile>(`/users/phone/${phone}/stats`, { stats });
     } catch (error) {
-      console.error('❌ Error updating user stats:', error);
+      console.error('Error updating user stats:', error);
       return null;
     }
   },
@@ -380,13 +389,13 @@ export const userService = {
     try {
       const phone = await getPhoneFromSession();
       if (!phone) {
-        console.error('❌ No phone number found in session');
+        console.error('No phone number found in session');
         return null;
       }
 
       return await postRequest<UserProfile>(`/users/phone/${phone}/posts`, { postId, postType });
     } catch (error) {
-      console.error('❌ Error adding created post:', error);
+      console.error('Error adding created post:', error);
       return null;
     }
   }

@@ -19,13 +19,25 @@ import Toast from 'react-native-toast-message';
 // Country codes data
 const countryCodes = [
   { code: '+91', country: 'India' },
-  { code: '+358', country: 'Suomi' },
-  { code: '+46', country: 'Svenska' },
-  { code: '+380', country: 'Українська мова' },
-  { code: '+47', country: 'Norsk' },
-  { code: '+49', country: 'Deutsch' },
-  { code: '+34', country: 'Español' },
-  { code: '+351', country: 'Português' },
+  { code: '+1', country: 'United States' },
+  { code: '+44', country: 'United Kingdom' },
+  { code: '+86', country: 'China' },
+  { code: '+81', country: 'Japan' },
+  { code: '+49', country: 'Germany' },
+  { code: '+33', country: 'France' },
+  { code: '+39', country: 'Italy' },
+  { code: '+34', country: 'Spain' },
+  { code: '+7', country: 'Russia' },
+  { code: '+55', country: 'Brazil' },
+  { code: '+61', country: 'Australia' },
+  { code: '+82', country: 'South Korea' },
+  { code: '+358', country: 'Finland' },
+  { code: '+46', country: 'Sweden' },
+  { code: '+380', country: 'Ukraine' },
+  { code: '+47', country: 'Norway' },
+  { code: '+351', country: 'Portugal' },
+  { code: '+31', country: 'Netherlands' },
+  { code: '+41', country: 'Switzerland' },
 ];
 
 const LoginScreen = () => {
@@ -142,36 +154,53 @@ const LoginScreen = () => {
                 style={styles.dropdownButton}
                 onPress={() => setShowDropdown(!showDropdown)}
               >
-                <Text style={styles.dropdownButtonText}>{selectedCountryCode}</Text>
+                <View style={styles.dropdownButtonContent}>
+                  <Text style={styles.dropdownButtonCode}>{selectedCountryCode}</Text>
+                  <View style={styles.buttonVerticalSeparator} />
+                  <Text style={styles.dropdownButtonCountry}>
+                    {countryCodes.find(item => item.code === selectedCountryCode)?.country || 'Select Country'}
+                  </Text>
+                </View>
                 <FontAwesome 
                   name={showDropdown ? "chevron-up" : "chevron-down"} 
                   size={16} 
                   color="#4b5563" 
                 />
               </TouchableOpacity>
-              {showDropdown && (
-                <View style={styles.dropdownList}>
-                  <ScrollView 
-                    style={styles.dropdownScroll} 
-                    keyboardShouldPersistTaps="handled"
-                    nestedScrollEnabled={true}
-                  >
-                    {countryCodes.map((item) => (
-                      <TouchableOpacity
-                        key={item.code}
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setSelectedCountryCode(item.code);
-                          setShowDropdown(false);
-                        }}
-                      >
-                        <Text style={styles.dropdownItemText}>{item.code} {item.country}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
             </View>
+
+            {showDropdown && (
+              <View style={styles.dropdownOverlay}>
+                <ScrollView 
+                  style={styles.dropdownScrollContainer}
+                  contentContainerStyle={styles.dropdownScrollContent}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={true}
+                  scrollEnabled={true}
+                >
+                  {countryCodes.map((item, index) => (
+                    <TouchableOpacity
+                      key={`${item.code}-${index}`}
+                      style={[
+                        styles.dropdownItem,
+                        index === countryCodes.length - 1 && styles.dropdownItemLast
+                      ]}
+                      onPress={() => {
+                        setSelectedCountryCode(item.code);
+                        setShowDropdown(false);
+                      }}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.dropdownItemContent}>
+                        <Text style={styles.dropdownItemCode}>{item.code}</Text>
+                        <View style={styles.verticalSeparator} />
+                        <Text style={styles.dropdownItemCountry}>{item.country}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
 
             <TextInput
               style={styles.phoneInput}
@@ -266,7 +295,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 16,
     zIndex: 1000,
-    position: 'relative',
   },
   dropdownButton: {
     flexDirection: 'row',
@@ -278,34 +306,86 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 14,
   },
+  dropdownButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  dropdownButtonCode: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '600',
+    minWidth: 50,
+  },
+  buttonVerticalSeparator: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#d1d5db',
+    marginHorizontal: 6,
+  },
+  dropdownButtonCountry: {
+    fontSize: 16,
+    color: '#6b7280',
+    flex: 1,
+  },
   dropdownButtonText: {
     fontSize: 16,
     color: '#111827',
   },
-  dropdownList: {
+  dropdownOverlay: {
+    position: 'absolute',
+    top: 120,
+    left: 28,
+    right: 28,
+    zIndex: 10000,
+    elevation: 20,
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
-    position: 'absolute',
-    top: 52,
-    left: 0,
-    right: 0,
-    zIndex: 9999,
-    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     maxHeight: 200,
   },
-  dropdownScroll: {
+  dropdownScrollContainer: {
     maxHeight: 200,
+  },
+  dropdownScrollContent: {
+    flexGrow: 1,
   },
   dropdownItem: {
-    padding: 14,
-    borderBottomWidth: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#e5e7eb',
+    backgroundColor: '#fff',
+  },
+  dropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+  dropdownItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  dropdownItemCode: {
+    fontSize: 16,
+    color: '#111827',
+    fontWeight: '600',
+    minWidth: 50,
+  },
+  verticalSeparator: {
+    width: 1,
+    height: 20,
+    backgroundColor: '#d1d5db',
+    marginHorizontal: 6,
+  },
+  dropdownItemCountry: {
+    fontSize: 16,
+    color: '#6b7280',
+    flex: 1,
   },
   dropdownItemText: {
     fontSize: 16,

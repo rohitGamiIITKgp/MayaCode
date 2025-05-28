@@ -1,6 +1,6 @@
 import { createPost, Post, updatePost } from '@/models/Post';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Post Operations
 export const postService = {
@@ -12,19 +12,54 @@ export const postService = {
     content: string,
     data: Partial<Post> = {}
   ): Promise<Post | null> {
+    console.log('Starting createPost with:', {
+      phone,
+      type,
+      title,
+      content,
+      data,
+      apiUrl: API_URL
+    });
+
     try {
+      console.log('Creating post object...');
       const post = createPost(phone, type, title, content, data);
+      console.log('Created post object:', post);
+
+      console.log('Making API request to:', `${API_URL}/posts`);
       const response = await fetch(`${API_URL}/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
         body: JSON.stringify(post),
       });
-      if (!response.ok) throw new Error('Failed to create post');
-      return response.json();
+
+      console.log('API Response status:', response.status);
+      console.log('API Response headers:', Object.fromEntries(response.headers.entries()));
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: `${API_URL}/posts`
+        });
+        throw new Error(`Failed to create post: ${response.status} ${response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      console.log('API Success Response:', responseData);
+      return responseData;
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error in createPost:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        apiUrl: API_URL
+      });
       return null;
     }
   },
@@ -44,7 +79,9 @@ export const postService = {
   // Get posts by phone
   async getUserPosts(phone: string): Promise<Post[]> {
     try {
-      const response = await fetch(`${API_URL}/posts/user/${phone}`);
+      console.log('postService API_URL:', API_URL);
+      console.log('Starting getUserPosts with:', { phone });
+      const response = await fetch(`${API_URL}/posts/phone/${phone}`);
       if (!response.ok) throw new Error('Failed to fetch user posts');
       return response.json();
     } catch (error) {
@@ -82,6 +119,37 @@ export const postService = {
     } catch (error) {
       console.error('Error deleting post:', error);
       return false;
+    }
+  },
+
+  // Get all posts
+  async getAllPosts(): Promise<Post[]> {
+    try {
+      console.log('Fetching all posts from:', `${API_URL}/posts`);
+      const response = await fetch(`${API_URL}/posts`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error fetching all posts:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText,
+          url: `${API_URL}/posts`
+        });
+        throw new Error(`Failed to fetch all posts: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('Successfully fetched all posts:', data);
+      return data;
+    } catch (error) {
+      console.error('Error in getAllPosts:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        apiUrl: API_URL
+      });
+      return [];
     }
   }
 }; 

@@ -1,37 +1,46 @@
 import { useAuth } from '@/context/AuthContext';
-import { PostType } from '@/models/Post';
+import { PostType, Location } from '@/models/Post';
 import { postService } from '@/services/postService';
 import * as ImagePicker from 'expo-image-picker';
 import React, { useState } from 'react';
-import { ActivityIndicator, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ScrollView, SafeAreaView } from 'react-native';
 import Toast from 'react-native-toast-message';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import MapView, { Region, Marker } from 'react-native-maps';
 
 interface CreatePostModalProps {
   visible: boolean;
   onClose: () => void;
   onPostCreated: () => void;
+  defaultPostType?: PostType;
 }
 
 export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   visible,
   onClose,
   onPostCreated,
+  defaultPostType,
 }) => {
   const { user } = useAuth();
-  const [selectedType, setSelectedType] = useState<PostType | null>(null);
+  const [selectedType, setSelectedType] = useState<PostType | null>(defaultPostType || null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [images, setImages] = useState<string[]>([]);
+  const [imageUri, setImageUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+
+  const initialRegion: Region = {
+    latitude: 37.78825,
+    longitude: -122.4324,
+    latitudeDelta: 0.0922,
+    longitudeDelta: 0.0421,
+  };
 
   const handleImagePick = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Toast.show({
-        type: 'error',
-        text1: 'Permission Denied',
-        text2: 'Sorry, we need camera roll permissions to make this work!',
-      });
+      Alert.alert('Permission required', 'Please grant camera roll permissions from settings to select a photo.');
       return;
     }
 
@@ -43,35 +52,62 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
-      setImages([result.assets[0].uri]);
+      setImageUri(result.assets[0].uri);
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+  const handleRemoveImage = () => {
+    setImageUri(null);
+  };
+
+  const handleSelectLocation = () => {
+    setShowMap(true);
+  };
+
+  const handleMapPress = (e: any) => {
+    setSelectedLocation({
+      latitude: e.nativeEvent.coordinate.latitude,
+      longitude: e.nativeEvent.coordinate.longitude
+    });
+  };
+
+  const handleConfirmLocation = () => {
+    setShowMap(false);
   };
 
   const handleSubmit = async () => {
-    if (!selectedType || !title || !content || !user) {
+    if (!selectedType || !title.trim() || !content.trim() || !user?.phone) {
       Toast.show({
         type: 'info',
         text1: 'Missing Information',
-        text2: 'Please select a type, title, and provide content.',
+        text2: 'Please select a type, provide title, content, and ensure you are logged in.',
+      });
+      return;
+    }
+
+    // Validate location requirement based on post type
+    if (selectedType !== 'Story' && !selectedLocation) {
+      Toast.show({
+        type: 'info',
+        text1: 'Location Required',
+        text2: 'Please select a location for your post.',
       });
       return;
     }
 
     setIsLoading(true);
     try {
-      const imageUrls = images.length > 0 ? images : undefined;
-
       const newPost = await postService.createPost(
         user.phone,
         selectedType,
-        title,
-        content,
+        title.trim(),
+        content.trim(),
         {
-          images: imageUrls,
+          images: imageUri ? [imageUri] : undefined,
+          location: selectedType !== 'Story' && selectedLocation ? {
+            latitude: selectedLocation.latitude,
+            longitude: selectedLocation.longitude
+          } : undefined
         }
       );
 
@@ -81,10 +117,11 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           text1: 'Post Created!',
           text2: `Your ${selectedType} has been created successfully.`,
         });
-        setSelectedType(null);
+        setSelectedType(defaultPostType || null);
         setTitle('');
         setContent('');
-        setImages([]);
+        setImageUri(null);
+        setSelectedLocation(null);
         
         onPostCreated();
         onClose();
@@ -109,6 +146,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   };
 
   const renderTypeSelection = () => (
+    !defaultPostType && (
     <View style={styles.typeContainer}>
       <Text style={styles.title}>What would you like to share?</Text>
       <TouchableOpacity
@@ -130,16 +168,43 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
         <Text style={styles.typeText}>Create a Story</Text>
       </TouchableOpacity>
     </View>
+    )
   );
 
   const renderPostForm = () => (
-    <View style={styles.formContainer}>
+    (defaultPostType || selectedType) && (
+    <ScrollView contentContainerStyle={styles.formScrollViewContent}>
+      <View style={styles.imagePreviewContainer}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={styles.previewImage} />
+        ) : (
+          <Text style={styles.imagePlaceholderText}>Photo will appear here</Text>
+        )}
+      </View>
+
+      <TouchableOpacity style={styles.imageButton} onPress={handleImagePick} disabled={isLoading}>
+        <Ionicons name="camera-outline" size={24} color={isLoading ? '#B0BEC5' : '#007AFF'} />
+        <Text style={[styles.imageButtonText, isLoading && { opacity: 0.5 }]}>
+          {imageUri ? 'Change Image' : 'Add Image (Optional)'}
+        </Text>
+      </TouchableOpacity>
+
+      {imageUri && (
+        <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage} disabled={isLoading}>
+          <Ionicons name="trash-outline" size={24} color={isLoading ? '#EF9A9A' : '#E53935'} />
+          <Text style={[styles.removeImageButtonText, isLoading && { opacity: 0.5 }]}>Remove Image</Text>
+        </TouchableOpacity>
+      )}
+
+      <Text style={styles.inputLabel}>Title</Text>
       <TextInput
         style={styles.input}
         placeholder="Title"
         value={title}
         onChangeText={setTitle}
+        editable={!isLoading}
       />
+      <Text style={styles.inputLabel}>Content</Text>
       <TextInput
         style={[styles.input, styles.descriptionInput]}
         placeholder="Content"
@@ -147,39 +212,40 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
         onChangeText={setContent}
         multiline
         numberOfLines={4}
+        editable={!isLoading}
       />
-      <TouchableOpacity style={styles.imageButton} onPress={handleImagePick} disabled={isLoading}>
-        <Text style={[styles.imageButtonText, isLoading && { opacity: 0.5 }]}>
-          {images.length > 0 ? 'Change Image' : 'Add Image (Optional)'}
-        </Text>
-      </TouchableOpacity>
-      {images.length > 0 && (
-        <View style={styles.imagePreviewContainer}>
-           {images.map((imageUri, index) => (
-            <View key={index} style={styles.imagePreviewWrapper}>
-              <Image source={{ uri: imageUri }} style={styles.previewImage} />
-               <TouchableOpacity 
-                  style={styles.removeImageButton}
-                  onPress={() => handleRemoveImage(index)}
-               >
-                  <Text style={styles.removeImageButtonText}>X</Text>
-               </TouchableOpacity>
+
+      {selectedType !== 'Story' && (
+        <>
+          <TouchableOpacity style={styles.locationButton} onPress={handleSelectLocation}>
+            <Ionicons name="location-outline" size={24} color="#007AFF" />
+            <Text style={styles.locationButtonText}>
+              {selectedLocation ? 'Change Location' : 'Add Location (Required)'}
+            </Text>
+          </TouchableOpacity>
+
+          {selectedLocation && (
+            <View style={styles.locationPreview}>
+              <Text style={styles.locationText}>
+                Selected Location: {selectedLocation.latitude.toFixed(4)}, {selectedLocation.longitude.toFixed(4)}
+              </Text>
             </View>
-           ))}
-        </View>
+          )}
+        </>
       )}
-      <View style={styles.buttonContainer}>
+
+      <View style={styles.buttonContainerInner}>
         <TouchableOpacity
           style={[styles.button, styles.cancelButton]}
           onPress={onClose}
           disabled={isLoading}
         >
-          <Text style={[styles.buttonText, isLoading && { opacity: 0.5 }]}>Cancel</Text>
+          <Text style={[styles.buttonText, { color: '#000' }, isLoading && { opacity: 0.5 }]}>Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.submitButton]}
           onPress={handleSubmit}
-          disabled={isLoading || !title || !content || !selectedType}
+          disabled={isLoading || !title.trim() || !content.trim() || !selectedType || (selectedType !== 'Story' && !selectedLocation)}
         >
           {isLoading ? (
             <ActivityIndicator color="#fff" />
@@ -190,7 +256,8 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </ScrollView>
+    )
   );
 
   return (
@@ -200,28 +267,84 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       transparent={true}
       onRequestClose={onClose}
     >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          {!selectedType ? renderTypeSelection() : renderPostForm()}
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={onClose} style={styles.backButton}>
+            <Ionicons name="close" size={24} color="#000" />
+            <Text style={styles.headerText}>Close</Text>
+          </TouchableOpacity>
         </View>
-      </View>
+
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+          {!defaultPostType && renderTypeSelection()}
+          {(defaultPostType || selectedType) && renderPostForm()}
+        </ScrollView>
+
+        {showMap && (
+          <Modal
+            visible={showMap}
+            animationType="slide"
+            presentationStyle="fullScreen"
+          >
+            <SafeAreaView style={styles.mapContainer}>
+              <View style={styles.mapHeader}>
+                <TouchableOpacity onPress={() => setShowMap(false)} style={styles.mapBackButton}>
+                  <Ionicons name="arrow-back" size={24} color="#000" />
+                  <Text style={styles.mapHeaderText}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleConfirmLocation} style={styles.confirmButton}>
+                  <Text style={styles.confirmButtonText}>Confirm Location</Text>
+                </TouchableOpacity>
+              </View>
+              <MapView
+                style={styles.map}
+                initialRegion={initialRegion}
+                onPress={handleMapPress}
+              >
+                {selectedLocation && (
+                  <Marker
+                    coordinate={{
+                      latitude: selectedLocation.latitude,
+                      longitude: selectedLocation.longitude
+                    }}
+                  />
+                )}
+              </MapView>
+            </SafeAreaView>
+          </Modal>
+        )}
+      </SafeAreaView>
     </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: '#FDFDE3',
   },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+    backgroundColor: '#FDFDE3',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerText: {
+    fontSize: 16,
+    marginLeft: 5,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
     padding: 20,
-    width: '90%',
-    maxHeight: '80%',
   },
   typeContainer: {
     alignItems: 'center',
@@ -249,6 +372,9 @@ const styles = StyleSheet.create({
   formContainer: {
     width: '100%',
   },
+  formScrollViewContent: {
+    paddingBottom: 20,
+  },
   input: {
     borderWidth: 1,
     borderColor: '#ddd',
@@ -261,51 +387,56 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
-  imageButton: {
-    backgroundColor: '#f0f0f0',
-    padding: 15,
-    borderRadius: 10,
+  imagePreviewContainer: {
     alignItems: 'center',
     marginBottom: 15,
   },
-  imageButtonText: {
+  imagePlaceholderText: {
     fontSize: 16,
-    color: '#007AFF',
-  },
-  imagePreviewContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginBottom: 15,
-  },
-  imagePreviewWrapper: {
-    position: 'relative',
-    marginRight: 10,
-    marginBottom: 10,
+    color: '#78909C',
   },
   previewImage: {
-    width: 100,
-    height: 100,
+    width: 150,
+    height: 150,
     borderRadius: 10,
   },
-  removeImageButton: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'red',
-    borderRadius: 15,
-    width: 20,
-    height: 20,
-    justifyContent: 'center',
+  imageButton: {
+    flexDirection: 'row',
+    backgroundColor: '#E3F2FD',
+    padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#BBDEFB',
+  },
+  imageButtonText: {
+    color: '#0D47A1',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  removeImageButton: {
+    marginTop: 10,
+    backgroundColor: '#FFEBEE',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#FFCDD2',
   },
   removeImageButtonText: {
-    color: 'white',
-    fontSize: 12,
+    color: '#C62828',
+    fontSize: 16,
     fontWeight: 'bold',
+    marginLeft: 5,
   },
-  buttonContainer: {
+  buttonContainerInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 20,
   },
   button: {
     flex: 1,
@@ -324,5 +455,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#fff',
+  },
+  inputLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10,
+  },
+  locationButtonText: {
+    marginLeft: 10,
+    color: '#007AFF',
+  },
+  locationPreview: {
+    backgroundColor: '#f0f0f0',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 20,
+  },
+  locationText: {
+    color: '#666',
+  },
+  mapContainer: {
+    flex: 1,
+  },
+  mapHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#fff',
+  },
+  mapBackButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  mapHeaderText: {
+    fontSize: 16,
+    marginLeft: 5,
+  },
+  confirmButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  map: {
+    flex: 1,
   },
 }); 

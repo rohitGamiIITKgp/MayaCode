@@ -106,7 +106,7 @@ const Layout = () => {
             options={{
               title: 'Help & Ask',
               headerShown: false,
-              tabBarIcon: ({ color, focused }) => renderTabIcon('help-circle-outline', 'Help', focused, color),
+              tabBarIcon: ({ color, focused }) => renderTabIcon('help-circle-outline', 'Help & Ask', focused, color),
             }}
           />
           <Tabs.Screen
@@ -147,6 +147,13 @@ const Layout = () => {
             }}
           />
           <Tabs.Screen
+            name="individual-chat"
+            options={{
+              href: null,
+              headerShown: false,
+            }}
+          />
+          <Tabs.Screen
             name="login"
             options={{
               href: null,
@@ -154,7 +161,14 @@ const Layout = () => {
             }}
           />
           <Tabs.Screen
-            name="signup"
+            name="tasks"
+            options={{
+              href: null,
+              headerShown: false,
+            }}
+          />
+          <Tabs.Screen
+            name="language"
             options={{
               href: null,
               headerShown: false,

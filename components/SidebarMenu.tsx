@@ -12,9 +12,9 @@ interface SidebarMenuProps {
 
 const menuItems = [
   { id: 1, title: 'Home', icon: 'home-outline', route: '/' },
-  { id: 2, title: 'Help posts', icon: 'heart-outline', route: '/help-posts' },
+  { id: 2, title: 'Help posts', icon: 'heart-outline', route: '/helpAndAsk' },
   { id: 3, title: 'Stories', icon: 'list-outline', route: '/stories' },
-  { id: 4, title: 'My chats', icon: 'chatbubble-outline', route: '/chats' },
+  { id: 4, title: 'My chats', icon: 'chatbubble-outline', route: '/chat' },
   { id: 5, title: 'My tasks', icon: 'hand-right-outline', route: '/tasks' },
   { id: 6, title: 'Notifications', icon: 'notifications-outline', route: '/notifications', badge: 1 },
   { id: 7, title: 'Language Selector', icon: 'language-outline', route: '/language' },
