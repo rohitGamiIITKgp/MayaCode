@@ -18,7 +18,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mayacode.app",
       "config": {
-        "googleMapsApiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+        "googleMapsApiKey": "${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
       },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
@@ -32,7 +32,7 @@
       "package": "com.mayacode.app",
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY_HERE"
+          "apiKey": "${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
         }
       },
       "permissions": [
