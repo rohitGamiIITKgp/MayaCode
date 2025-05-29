@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "MayaCodeNew",
-    "slug": "mayacodenew",
+    "name": "MayaCode",
+    "slug": "mayacode",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/MayaCode-logo.png",
@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mayacodenew.app",
+      "bundleIdentifier": "com.mayacode.app",
       "config": {
         "googleMapsApiKey": "${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
       },
@@ -29,7 +29,7 @@
         "foregroundImage": "./assets/images/MayaCode-logo.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mayacodenew.app",
+      "package": "com.mayacode.app",
       "config": {
         "googleMaps": {
           "apiKey": "${process.env.EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
@@ -47,21 +47,15 @@
     "plugins": [
       "expo-router",
       [
-        "expo-splash-screen",
+        "expo-location",
         {
-          "image": "./assets/MayaCode-logo.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "locationAlwaysAndWhenInUsePermission": "Allow MayaCode to use your location."
         }
       ]
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "eas": {
-        "projectId": "d18aa899-7eea-4716-a289-571003e02a76"
+        "projectId": "09decc9a-4616-456d-ad10-f8f42ae8642f"
       }
     }
   }
