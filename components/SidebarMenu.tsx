@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
 import React from 'react';
 import { Animated, Dimensions, Image, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useAuth } from '@/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -26,6 +27,7 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
   const isDark = colorScheme === 'dark';
   const translateX = React.useRef(new Animated.Value(-width)).current;
   const segments = useSegments();
+  const { user, isLoading } = useAuth();
 
   const activeRoute = '/' + segments.join('/');
 
@@ -125,7 +127,9 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
             <View className="flex-row items-center mb-4">
               <Ionicons name="person-circle-outline" size={40} color="#4a5568" style={{ marginRight: 12 }} />
               <TouchableOpacity onPress={() => handleNavigation("/profile")}>
-                <Text className="text-lg font-semibold text-gray-800">Rohit Gami</Text>
+                <Text className="text-lg font-semibold text-gray-800">
+                  {isLoading ? 'Loading...' : user?.name || user?.phone || 'Profile'}
+                </Text>
               </TouchableOpacity>
             </View>
             <View className="flex-row justify-around">
