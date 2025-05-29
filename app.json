@@ -52,6 +52,11 @@
           "locationAlwaysAndWhenInUsePermission": "Allow MayaCode to use your location."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "dd2a45c0-9d2a-4f46-9b2e-b49444cfbba8"
+      }
+    }
   }
 }
