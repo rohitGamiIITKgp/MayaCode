@@ -112,17 +112,12 @@ const LoginScreen = () => {
       });
       return;
     }
-    
     setIsLoading(true);
+    console.log("check1");
     try {
-      const sessions = await account.listSessions();
-      for (const session of sessions.sessions) {
-        if (session.$id !== 'current') {
-          await account.deleteSession(session.$id);
-        }
-      }
-      console.log('Deleted other sessions');
+      console.log("check4");
       await account.createSession(userId, otp);
+      console.log("check5");
       await checkAuthStatus();
       navigation.navigate('Home' as never);
     } catch (error: any) {
