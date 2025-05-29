@@ -11,7 +11,7 @@ const sampleContacts = [
   { id: 'contact4', name: 'Admin - Regarding Your Post' },
 ];
 
-const ChatListScreen = () => {
+const Chat = () => {
   const router = useRouter();
 
   const handleContactPress = (contactId: string, contactName: string) => {
@@ -79,4 +79,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatListScreen;
+export default Chat;

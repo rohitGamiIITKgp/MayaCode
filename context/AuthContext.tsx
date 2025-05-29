@@ -190,26 +190,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const session = await account.createSession(userId, otp);
       console.log('Session created:', session);
 
-      // After successful session creation, check if user exists
-      try {
-        const existingUser = await account.get();
-        console.log('Existing user found:', existingUser);
-      } catch (error: any) {
-        // If user doesn't exist (401 error), create new user
-        if (error.code === 401) {
-          console.log('Creating new user...');
-          const newUser = await account.create(
-            ID.unique(),
-            'User', // Default name
-            userId, // Phone number as ID
-            userId  // Phone number as password
-          );
-          console.log('New user created:', newUser);
-        } else {
-          throw error;
-        }
-      }
-
       // Update auth status
       await checkAuthStatus();
 
