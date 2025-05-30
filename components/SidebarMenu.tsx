@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useSegments } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, Dimensions, Image, Text, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { useAuth } from '@/context/AuthContext';
+import { UserProfile } from '@/models/User';
+import { userService } from '@/services/userService';
 
 const { width } = Dimensions.get('window');
 
@@ -27,9 +29,31 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
   const isDark = colorScheme === 'dark';
   const translateX = React.useRef(new Animated.Value(-width)).current;
   const segments = useSegments();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const activeRoute = '/' + segments.join('/');
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user) {
+        setIsLoadingProfile(true);
+        try {
+          const profile = await userService.getUserProfile();
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+        } finally {
+          setIsLoadingProfile(false);
+        }
+      }
+    };
+
+    if (user) {
+      fetchUserProfile();
+    }
+  }, [user]);
 
   React.useEffect(() => {
     Animated.timing(translateX, {
@@ -44,6 +68,15 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
       router.push(route);
     }
     onClose();
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      onClose();
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   return (
@@ -82,7 +115,7 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
           borderBottomRightRadius: 20,
         }}
       >
-        <View className="flex-1 p-4">
+        <View style={{ padding: 20, flex: 1 }}>
           <View className="flex-row items-center mb-8">
             <Image 
               source={require('@/assets/images/commu-logo.png')}
@@ -123,15 +156,25 @@ export default function SidebarMenu({ isOpen, onClose }: SidebarMenuProps) {
             })}
           </View>
 
-          <View className="border-t border-gray-300 pt-4">
+          <View style={{ marginTop: 'auto' }}>
             <View className="flex-row items-center mb-4">
               <Ionicons name="person-circle-outline" size={40} color="#4a5568" style={{ marginRight: 12 }} />
               <TouchableOpacity onPress={() => handleNavigation("/profile")}>
                 <Text className="text-lg font-semibold text-gray-800">
-                  {isLoading ? 'Loading...' : user?.name || user?.phone || 'Profile'}
+                  {isLoading || isLoadingProfile ? 'Loading...' : userProfile?.name || user?.phone || 'Profile'}
                 </Text>
               </TouchableOpacity>
             </View>
+
+            {/* Logout Button */}
+            <TouchableOpacity
+              className="flex-row items-center py-3 px-4 rounded-lg bg-red-500 mb-4"
+              onPress={handleLogout}
+            >
+              <Ionicons name="log-out-outline" size={24} color="#ffffff" style={{ marginRight: 16 }} />
+              <Text className="text-lg text-white font-semibold">Logout</Text>
+            </TouchableOpacity>
+
             <View className="flex-row justify-around">
               <TouchableOpacity><Ionicons name="help-circle-outline" size={24} color="#4a5568" /></TouchableOpacity>
               <TouchableOpacity><Ionicons name="language-outline" size={24} color="#4a5568" /></TouchableOpacity>

@@ -49,7 +49,7 @@ const LoginScreen = () => {
   const [selectedCountryCode, setSelectedCountryCode] = useState('+91');
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const { checkAuthStatus } = useAuth();
+  const { sendOtp, verifyOtp } = useAuth();
   const navigation = useNavigation();
 
   // Validate phone number: must be 10 digits
@@ -68,27 +68,20 @@ const LoginScreen = () => {
       return;
     }
     
-    if (isLoading) {
-      return; // Prevent multiple simultaneous requests
-    }
+    if (isLoading) return;
     
     setIsLoading(true);
     try {
       const fullPhoneNumber = `${selectedCountryCode}${phone}`;
-      console.log('Sending OTP to:', fullPhoneNumber); // Debug log
+      console.log('Sending OTP to:', fullPhoneNumber);
       
-      const token = await account.createPhoneToken(ID.unique(), fullPhoneNumber);
-      setUserId(token.userId);
-      setIsOtpSent(true);
-
-      Toast.show({
-        type: 'success',
-        text1: 'OTP Sent',
-        text2: 'Please enter the OTP sent to your phone.',
-      });
+      const userId = await sendOtp(fullPhoneNumber);
+      if (userId) {
+        setUserId(userId);
+        setIsOtpSent(true);
+      }
     } catch (error: any) {
-      console.error('OTP Send Error:', error.message);
-      console.error('Full error:', error); // More detailed error logging
+      console.error('OTP Send Error:', error);
       Toast.show({
         type: 'error',
         text1: 'Failed to send OTP',
@@ -100,9 +93,7 @@ const LoginScreen = () => {
   };
 
   const handleVerifyOtp = async () => {
-    if (isLoading) {
-      return; // Prevent multiple simultaneous requests
-    }
+    if (isLoading) return;
     
     if (!otp || otp.length < 4) {
       Toast.show({
@@ -112,17 +103,15 @@ const LoginScreen = () => {
       });
       return;
     }
+
     setIsLoading(true);
-    console.log("check1");
     try {
-      console.log("check4");
-      await account.createSession(userId, otp);
-      console.log("check5");
-      await checkAuthStatus();
-      navigation.navigate('Home' as never);
+      const success = await verifyOtp(userId, otp);
+      if (success) {
+        navigation.navigate('Home' as never);
+      }
     } catch (error: any) {
-      console.error('OTP Verification Error:', error.message);
-      console.error('Full error:', error); // More detailed error logging
+      console.error('OTP Verification Error:', error);
       Toast.show({
         type: 'error',
         text1: 'Invalid OTP',
@@ -206,7 +195,11 @@ const LoginScreen = () => {
               onChangeText={setPhone}
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleSendOtp} disabled={isLoading}>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleSendOtp} 
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -227,7 +220,11 @@ const LoginScreen = () => {
               onChangeText={setOtp}
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleVerifyOtp} disabled={isLoading}>
+            <TouchableOpacity 
+              style={styles.button} 
+              onPress={handleVerifyOtp} 
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
@@ -236,11 +233,7 @@ const LoginScreen = () => {
             </TouchableOpacity>
 
             <TouchableOpacity 
-              onPress={() => {
-                if (!isLoading) {
-                  handleSendOtp();
-                }
-              }} 
+              onPress={handleSendOtp} 
               disabled={isLoading}
             >
               <Text style={styles.link}>Resend OTP</Text>
@@ -289,63 +282,55 @@ const styles = StyleSheet.create({
   dropdownContainer: {
     width: '100%',
     marginBottom: 16,
-    zIndex: 1000,
   },
   dropdownButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f3f4f6',
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 14,
+    backgroundColor: '#fff',
   },
   dropdownButtonContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1,
   },
   dropdownButtonCode: {
     fontSize: 16,
     color: '#111827',
     fontWeight: '600',
-    minWidth: 50,
   },
   buttonVerticalSeparator: {
     width: 1,
     height: 20,
     backgroundColor: '#d1d5db',
-    marginHorizontal: 6,
+    marginHorizontal: 8,
   },
   dropdownButtonCountry: {
     fontSize: 16,
     color: '#6b7280',
-    flex: 1,
-  },
-  dropdownButtonText: {
-    fontSize: 16,
-    color: '#111827',
   },
   dropdownOverlay: {
     position: 'absolute',
     top: 120,
     left: 28,
     right: 28,
-    zIndex: 10000,
-    elevation: 20,
     backgroundColor: '#fff',
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#d1d5db',
-    borderRadius: 8,
+    maxHeight: 300,
+    zIndex: 1000,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    maxHeight: 200,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   dropdownScrollContainer: {
-    maxHeight: 200,
+    maxHeight: 300,
   },
   dropdownScrollContent: {
     flexGrow: 1,
@@ -381,10 +366,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6b7280',
     flex: 1,
-  },
-  dropdownItemText: {
-    fontSize: 16,
-    color: '#111827',
   },
   phoneInput: {
     borderColor: '#d1d5db',

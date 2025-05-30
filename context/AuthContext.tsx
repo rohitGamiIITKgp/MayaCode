@@ -29,14 +29,14 @@ export interface User {
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean; // Overall loading state
-  isSendingOtp: boolean; // Loading state specifically for sending OTP
-  isVerifyingOtp: boolean; // Loading state specifically for verifying OTP
+  isLoading: boolean;
+  isSendingOtp: boolean;
+  isVerifyingOtp: boolean;
   isAuthenticated: boolean;
-  sessionId: string | null; // Appwrite session ID
+  sessionId: string | null;
   checkAuthStatus: () => Promise<void>;
-  sendOtp: (phone: string) => Promise<string | null>; // Returns userId on success
-  verifyOtp: (userId: string, otp: string) => Promise<boolean>; // Returns success status
+  sendOtp: (phone: string) => Promise<string | null>;
+  verifyOtp: (userId: string, otp: string) => Promise<boolean>;
   signOut: () => Promise<void>;
 }
 
@@ -48,7 +48,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false); // Changed to false initially
+  const [isLoading, setIsLoading] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -58,17 +58,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Helper to sanitize phone number to +[country code][number]
   const sanitizePhone = (phone: string): string => {
-     // Basic sanitization, may need more robust logic based on input format
-    const digits = phone.replace(/D/g, '');
-    // Assuming a default country code if none is provided and it looks like a local number
-    if (digits.length === 10) { // Assuming 10 digit local number needs a country code
-        return '+91' + digits; // Example for India
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) {
+      return '+91' + digits;
     }
-    // If it already looks like it has a country code, just ensure it starts with +
-    if (digits.length > 10 && digits.startsWith('91')) { // Example for India
-        return '+' + digits;
+    if (digits.length > 10 && digits.startsWith('91')) {
+      return '+' + digits;
     }
-    return phone; // Return as is if format is unexpected
+    return phone;
   };
 
   const checkAuthStatus = async (): Promise<void> => {
@@ -80,16 +77,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (appwriteUser) {
         setUser({
-           $id: appwriteUser.$id,
-           $createdAt: appwriteUser.$createdAt,
-           $updatedAt: appwriteUser.$updatedAt,
-           name: appwriteUser.name || 'User',
-           phone: appwriteUser.phone || '',
-           email: appwriteUser.email || undefined,
-           status: appwriteUser.status,
-           phoneVerification: appwriteUser.phoneVerification,
-           emailVerification: appwriteUser.emailVerification,
-           prefs: appwriteUser.prefs || {},
+          $id: appwriteUser.$id,
+          $createdAt: appwriteUser.$createdAt,
+          $updatedAt: appwriteUser.$updatedAt,
+          name: appwriteUser.name || 'User',
+          phone: appwriteUser.phone || '',
+          email: appwriteUser.email || undefined,
+          status: appwriteUser.status,
+          phoneVerification: appwriteUser.phoneVerification,
+          emailVerification: appwriteUser.emailVerification,
+          prefs: appwriteUser.prefs || {},
         });
         setIsAuthenticated(true);
         
@@ -97,8 +94,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const currentSession = sessions.sessions.find(session => session.current);
         if (currentSession) {
           setSessionId(currentSession.$id);
-        } else {
-          setSessionId(null);
         }
       } else {
         setUser(null);
@@ -107,17 +102,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       console.error("Error checking session:", error);
-      if (error.code === 401) {
-        setUser(null);
-        setIsAuthenticated(false);
-        setSessionId(null);
-      } else {
-        Toast.show({
-          type: 'error',
-          text1: 'Authentication Check Failed',
-          text2: error.message || 'Could not check authentication status.'
-        });
-      }
+      setUser(null);
+      setIsAuthenticated(false);
+      setSessionId(null);
     } finally {
       setIsLoading(false);
     }
@@ -129,13 +116,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const sanitizedPhone = sanitizePhone(phone);
       console.log('Sending OTP to:', sanitizedPhone);
 
-      // Check if a user with this phone number already exists in Appwrite
-      // Appwrite does not have a direct way to check user existence by phone before creating token
-      // You might need a backend function for this if you want to differentiate new/existing users upfront.
-      // For now, we proceed to create a token, which might fail if user exists but not verified, or phone is invalid.
-
       const token = await account.createPhoneToken(
-        ID.unique(), // Login ID - can be unique or user identifier (phone)
+        ID.unique(),
         sanitizedPhone
       );
       console.log('Phone token created:', token);
@@ -146,7 +128,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         text2: 'Please enter the OTP sent to your phone.',
       });
 
-      return token.userId; // Return userId needed for session creation
+      return token.userId;
     } catch (error: any) {
       console.error("Error sending OTP:", error);
       Toast.show({
@@ -163,32 +145,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const verifyOtp = async (userId: string, otp: string): Promise<boolean> => {
     setIsVerifyingOtp(true);
     try {
-      console.log(`Verifying OTP for userId: ${userId} with OTP: ${otp}`);
+      console.log(`Verifying OTP for userId: ${userId}`);
       
-      // Delete current session first
-      try {
-        await account.deleteSession('current');
-        console.log('Deleted current session');
-      } catch (error) {
-        console.log('No current session to delete or error deleting session:', error);
-      }
-
-      // Delete all other sessions
+      // Delete all existing sessions
       try {
         const sessions = await account.listSessions();
         for (const session of sessions.sessions) {
-          if (session.$id !== 'current') {
-            await account.deleteSession(session.$id);
-          }
+          await account.deleteSession(session.$id);
         }
-        console.log('Deleted other sessions');
+        console.log('Deleted existing sessions');
       } catch (error) {
-        console.log('Error deleting other sessions:', error);
+        console.log('Error deleting sessions:', error);
       }
       
       // Create new session with the OTP
-      const session = await account.createSession(userId, otp);
-      console.log('Session created:', session);
+      await account.createSession(userId, otp);
+      console.log('Session created successfully');
 
       // Update auth status
       await checkAuthStatus();
@@ -215,12 +187,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const signOut = async (): Promise<void> => {
-    setIsLoading(true); // Set overall loading during sign out
+    setIsLoading(true);
     try {
-      console.log('Signing out...');
       await account.deleteSession("current");
-      console.log('Session deleted.');
-
       setUser(null);
       setIsAuthenticated(false);
       setSessionId(null);
@@ -231,7 +200,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         text2: 'Logged out successfully',
       });
 
-      router.replace('/login'); // Navigate back to login after sign out
+      router.replace('/login');
     } catch (error: any) {
       console.error("Error logging out:", error);
       Toast.show({
