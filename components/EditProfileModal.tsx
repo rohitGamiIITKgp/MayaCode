@@ -16,7 +16,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import Toast from 'react-native-toast-message';
 
@@ -96,6 +97,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   const handleSubmit = async () => {
+    if (isLoading) return; // Prevent multiple submissions
+    
     try {
       setIsLoading(true);
       const profileData: Partial<UserProfile> = {

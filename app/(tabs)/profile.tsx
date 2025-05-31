@@ -99,21 +99,13 @@ export default function ProfileScreen() {
 
   const handleProfileSaved = async () => {
     try {
-      if (!userProfile) {
-        // If no profile exists, create one
-        const newProfile = await createInitialProfile();
-        if (newProfile) {
-          setUserProfile(newProfile);
-        }
-      } else {
-        // Update existing profile
-        const updated = await userService.updateUserProfile(userProfile);
-        if (updated) {
-          setUserProfile(updated);
-        }
+      // Just fetch the latest profile data instead of updating
+      const updatedProfile = await userService.getUserProfile();
+      if (updatedProfile) {
+        setUserProfile(updatedProfile);
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
+      console.error('Error refreshing profile:', error);
     }
   };
 
