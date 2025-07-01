@@ -1,0 +1,82 @@
+{
+  "cli": {
+    "version": ">= 16.6.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "${EXPO_PUBLIC_BACKEND_URL}",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "${EXPO_PUBLIC_APPWRITE_PROJECT_ID}",
+        "EXPO_PUBLIC_GOOGLE_MAP_API_KEY": "${EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
+      },
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      },
+      "ios": {
+        "buildConfiguration": "Debug",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "node": "22.16.0",
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "${EXPO_PUBLIC_BACKEND_URL}",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "${EXPO_PUBLIC_APPWRITE_PROJECT_ID}",
+        "EXPO_PUBLIC_GOOGLE_MAP_API_KEY": "${EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "${EXPO_PUBLIC_BACKEND_URL}",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "${EXPO_PUBLIC_APPWRITE_PROJECT_ID}",
+        "EXPO_PUBLIC_GOOGLE_MAP_API_KEY": "${EXPO_PUBLIC_GOOGLE_MAP_API_KEY}"
+      },
+      "android": {
+        "buildType": "app-bundle",
+        "gradleCommand": ":app:bundleRelease",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      },
+      "ios": {
+        "buildConfiguration": "Release",
+        "env": {
+          "NODE_OPTIONS": "--max_old_space_size=4096",
+          "EXPO_USE_CUSTOM_METRO_CONFIG": "true"
+        }
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
