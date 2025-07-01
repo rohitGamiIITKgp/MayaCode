@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "MayaCode",
+    "slug": "mayacode",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/MayaCode-logo.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/MayaCode-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mayacode.app",
+      "config": {
+        "googleMapsApiKey": "AIzaSyCmPn37y_vzPPN4UsmDjN2koFAsmAK1G0M"
+      },
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/MayaCode-logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.mayacode.app",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCmPn37y_vzPPN4UsmDjN2koFAsmAK1G0M"
+        }
+      },
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/MayaCode-logo.png"
+    },
+    "scheme": "mayacode",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow MayaCode to use your location."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "dd2a45c0-9d2a-4f46-9b2e-b49444cfbba8"
+      }
+    }
+  }
+}

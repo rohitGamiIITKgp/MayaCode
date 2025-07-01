@@ -1,0 +1,26 @@
+# Root-level .env file
+.env
+
+# Frontend
+/Frontend/node_modules
+Frontend/.env
+
+# Backend
+/Backend/node_modules
+Backend/.env
+
+# Optional: ignore build artifacts if you're building React
+Frontend/build/
+
+# Optional: logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / Editor specific
+.DS_Store
+.vscode/
+.idea/
+*.swp
