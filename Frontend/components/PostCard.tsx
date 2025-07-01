@@ -31,6 +31,12 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   // Placeholder for edit action
+  // Placeholder for edit action
+  // Placeholder for edit action
+  const handleAccess = () => {
+
+  };
+
   const handleEdit = () => {
     onEdit && onEdit(post);
   };
