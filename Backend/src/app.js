@@ -5,7 +5,6 @@ const passport = require("passport");
 
 const connectDB = require("./config/db.js");
 const { errorHandler } = require("./middleware/errorMiddleware.js");
-const logger = require("./utils/logger.js");
 require("./config/passport.js"); // Load passport config
 
 const postRoutes = require("./routes/postRoutes.js");
@@ -23,7 +22,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url}`, req.body);
   next();
 });
 
