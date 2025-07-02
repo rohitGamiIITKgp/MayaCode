@@ -49,7 +49,7 @@ const errorHandler = (err, req, res, next) => {
     } 
     // Programming or other unknown error: don't leak error details
     else {
-      logger.error('ERROR 💥', err);
+      logger.error('ERROR:', err);
       res.status(500).json({
         status: 'error',
         message: 'Something went wrong!'
@@ -58,7 +58,4 @@ const errorHandler = (err, req, res, next) => {
   }
 };
 
-module.exports = {
-  AppError,
-  errorHandler
-}; 
+module.exports = { AppError, errorHandler }; 

@@ -4,12 +4,13 @@ const connectDB = async () => {
   try {
     console.log('Attempting to connect to MongoDB...');
     console.log('Connection Details:', {
-      dbUri: process.env.MONGO_URI ? '<redacted>' : 'N/A'
+      dbUri: process.env.MONGODB_URI ? '<redacted>' : 'N/A'
     });
     
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      dbName: 'mayacode',
     });
     
     console.log('MongoDB Connection Details:', {
@@ -52,4 +53,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = connectDB; 
+module.exports = connectDB;

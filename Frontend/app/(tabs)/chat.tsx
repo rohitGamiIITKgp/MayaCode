@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-nati
 import React from 'react';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SocketProvider } from "../../context/SocketContext";
 
 // Sample data for chat contacts
 const sampleContacts = [
@@ -21,23 +22,25 @@ const Chat = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.header}>Chats</Text>
-        <ScrollView style={styles.contactsList}>
-          {sampleContacts.map((contact) => (
-            <TouchableOpacity
-              key={contact.id}
-              style={styles.contactItem}
-              onPress={() => handleContactPress(contact.id, contact.name)}
-            >
-              <Text style={styles.contactName}>{contact.name}</Text>
-              {/* Add a placeholder for last message or time if needed */}
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+    <SocketProvider>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <Text style={styles.header}>Chats</Text>
+          <ScrollView style={styles.contactsList}>
+            {sampleContacts.map((contact) => (
+              <TouchableOpacity
+                key={contact.id}
+                style={styles.contactItem}
+                onPress={() => handleContactPress(contact.id, contact.name)}
+              >
+                <Text style={styles.contactName}>{contact.name}</Text>
+                {/* Add a placeholder for last message or time if needed */}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </SafeAreaView>
+    </SocketProvider>
   );
 };
 
