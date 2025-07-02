@@ -41,7 +41,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    console.log("process.env.EXPO_PUBLIC_BASE_URL", process.env.EXPO_PUBLIC_BASE_URL);
+    // console.log("process.env.EXPO_PUBLIC_BASE_URL", process.env.EXPO_PUBLIC_BASE_URL);
     const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
     _socket.on("message", onMessageRec);
 

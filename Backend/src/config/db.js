@@ -25,22 +25,22 @@ const connectDB = async () => {
       for (const collection of collections) {
         const collectionName = collection.name;
         const indexes = await mongoose.connection.db.collection(collectionName).listIndexes().toArray();
-        console.log('Current indexes:', indexes);
+        // console.log('Current indexes:', indexes);
 
         // Check and drop userId_1 index if it exists
         const userIdIndex = indexes.find(index => index.name === 'userId_1');
         if (userIdIndex) {
-          console.log('Dropping userId_1 index...');
+          // console.log('Dropping userId_1 index...');
           await mongoose.connection.db.collection(collectionName).dropIndex('userId_1');
-          console.log('userId_1 index dropped successfully');
+          // console.log('userId_1 index dropped successfully');
         }
 
         // Check and create phone_1 index if it doesn't exist and the collection is UserProfile
         const phoneIndex = indexes.find(index => index.name === 'phone_1');
         if (!phoneIndex && collectionName === 'userprofiles') {
-          console.log('Creating phone_1 index...');
+          // console.log('Creating phone_1 index...');
           await mongoose.connection.db.collection(collectionName).createIndex({ phone: 1 });
-          console.log('phone_1 index created successfully');
+          // console.log('phone_1 index created successfully');
         }
       }
     } catch (indexError) {
