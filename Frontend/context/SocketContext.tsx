@@ -41,7 +41,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    const _socket = io("http://localhost:8000");
+    console.log("process.env.EXPO_PUBLIC_BASE_URL", process.env.EXPO_PUBLIC_BASE_URL);
+    const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
     _socket.on("message", onMessageRec);
 
     setSocket(_socket);

@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 
 // Create a new post
 exports.createPost = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Create Post`, req.body);
   try {
     const post = new Post(req.body);
     await post.save();
@@ -13,6 +14,7 @@ exports.createPost = async (req, res) => {
 
 // Get all posts
 exports.getPosts = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Get Posts`, req.query);
   try {
     const { type } = req.query; // Get the type from query parameters
     let query = {};
@@ -31,6 +33,7 @@ exports.getPosts = async (req, res) => {
 
 // Get a single post
 exports.getPost = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Get Post`, req.params);
   try {
     const { id } = req.params;
     
@@ -47,6 +50,7 @@ exports.getPost = async (req, res) => {
 
 // Update a post
 exports.updatePost = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Update Post`, req.params, req.body);
   try {
     const { id } = req.params;
     
@@ -68,6 +72,7 @@ exports.updatePost = async (req, res) => {
 
 // Delete a post
 exports.deletePost = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Delete Post`, req.params);
   try {
     const { id } = req.params;
     
@@ -84,6 +89,7 @@ exports.deletePost = async (req, res) => {
 
 // Get posts by phone
 exports.getUserPosts = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Get User Posts`, req.params);
   try {
     const { phone } = req.params;
     
