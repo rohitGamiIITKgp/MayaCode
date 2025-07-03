@@ -43,12 +43,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   useEffect(() => {
     // console.log("process.env.EXPO_PUBLIC_BASE_URL", process.env.EXPO_PUBLIC_BASE_URL);
     const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
-    _socket.on("message", onMessageRec);
+    _socket.on("chat:receive", (data) => {
+      // data is already an object with a 'message' property
+      setMessages((prev) => [...prev, data.message]);
+    });
 
     setSocket(_socket);
 
     return () => {
-      _socket.off("message", onMessageRec);
+      _socket.off("chat:receive");
       _socket.disconnect();
       setSocket(undefined);
     };
