@@ -1,21 +1,21 @@
 const { Server } = require("socket.io");
-// const Redis = require("ioredis");
+const Redis = require("ioredis");
 // const prismaClient = require("./prisma");
 // const { produceMessage } = require("./kafka");
 
-// const pub = new Redis({
-//   host: "",
-//   port: 0,
-//   username: "default",
-//   password: "",
-// });
+const pub = new Redis({
+  host: process.env.VALKEY_HOST,
+  port: process.env.VALKEY_PORT,
+  username: process.env.VALKEY_USERNAME,
+  password: process.env.VALKEY_PASSWORD,
+});
 
-// const sub = new Redis({
-//   host: "",
-//   port: 0,
-//   username: "",
-//   password: "",
-// });
+const sub = new Redis({
+  host: process.env.VALKEY_HOST,
+  port: process.env.VALKEY_PORT,
+  username: process.env.VALKEY_USERNAME,
+  password: process.env.VALKEY_PASSWORD,
+});
 
 class SocketService {
   
@@ -41,7 +41,7 @@ class SocketService {
       socket.on("event:message", async ({ message }) => {
         console.log("New Message Rec.", message);
         // publish this message to redis
-        // await pub.publish("MESSAGES", JSON.stringify({ message }));
+        await pub.publish("MESSAGES", JSON.stringify({ message }));
       });
     });
 

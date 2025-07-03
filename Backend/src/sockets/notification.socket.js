@@ -1,6 +1,6 @@
-module.exports = (io, socket) => {
+module.exports = (io, socket, pub) => {
   socket.on("notification:send", (data) => {
     console.log("Received notification:", data);
-    io.emit("notification:receive", data); // Broadcast to all
+    pub.publish("NOTIFICATION_MESSAGES", JSON.stringify(data));
   });
 };
