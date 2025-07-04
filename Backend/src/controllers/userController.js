@@ -2,6 +2,7 @@ const UserProfile = require('../models/User');
 
 // Get user profile by phone
 exports.getUserByPhone = async (req, res) => {
+  console.log(`HTTP ${req.method} ${req.url} - Get User By Phone`, req.params);
   try {
     const { phone } = req.params;
     console.log('Get User - Request:', { phone });
