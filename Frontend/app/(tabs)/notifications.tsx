@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
-import { SocketProvider } from "../../context/SocketContext";
 
 // Sample data for notifications
 const sampleNotifications = [
@@ -22,17 +21,15 @@ const NotificationsPage = () => {
   );
 
   return (
-    <SocketProvider>
-      <View style={styles.container}>
-        <Text style={styles.title}>Notifications</Text>
-        <FlatList
-          data={notifications}
-          renderItem={renderNotificationItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContent}
-        />
-      </View>
-    </SocketProvider>
+    <View style={styles.container}>
+      <Text style={styles.title}>Notifications</Text>
+      <FlatList
+        data={notifications}
+        renderItem={renderNotificationItem}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContent}
+      />
+    </View>
   );
 };
 

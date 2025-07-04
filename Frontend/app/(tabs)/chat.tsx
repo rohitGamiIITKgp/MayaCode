@@ -11,7 +11,7 @@ const MessageBubble = ({ text }: { text: string }) => (
   </View>
 );
 
-const ChatScreen = () => {
+const Chat = () => {
   const { sendMessage, messages } = useSocket();
   const [messageInput, setMessageInput] = useState('');
   const scrollViewRef = useRef<ScrollView>(null);
@@ -66,12 +66,6 @@ const ChatScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const Chat = () => (
-  <SocketProvider>
-    <ChatScreen />
-  </SocketProvider>
-);
 
 const styles = StyleSheet.create({
   container: {

@@ -9,9 +9,11 @@ interface SocketProviderProps {
 interface ISocketContext {
   sendMessage: (msg: string) => any;
   messages: string[];
+  connectSocket: () => void;
+  disconnectSocket: () => void;
 }
 
-const SocketContext = React.createContext<ISocketContext | null>(null);
+export const SocketContext = React.createContext<ISocketContext | null>(null);
 
 export const useSocket = () => {
   const state = useContext(SocketContext);
@@ -24,6 +26,24 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket>();
   const [messages, setMessages] = useState<string[]>([]);
 
+  const connectSocket = useCallback(() => {
+    if (!socket) {
+      const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
+      _socket.on("chat:receive", (data) => {
+        setMessages((prev) => [...prev, data.message]);
+      });
+      setSocket(_socket);
+    }
+  }, [socket]);
+
+  const disconnectSocket = useCallback(() => {
+    if (socket) {
+      socket.off("chat:receive");
+      socket.disconnect();
+      setSocket(undefined);
+    }
+  }, [socket]);
+
   const sendMessage: ISocketContext["sendMessage"] = useCallback(
     (msg) => {
       console.log("Send Message", msg);
@@ -34,31 +54,8 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     [socket]
   );
 
-  const onMessageRec = useCallback((msg: string) => {
-    console.log("From Server Msg Rec", msg);
-    const { message } = JSON.parse(msg) as { message: string };
-    setMessages((prev) => [...prev, message]);
-  }, []);
-
-  useEffect(() => {
-    // console.log("process.env.EXPO_PUBLIC_BASE_URL", process.env.EXPO_PUBLIC_BASE_URL);
-    const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
-    _socket.on("chat:receive", (data) => {
-      // data is already an object with a 'message' property
-      setMessages((prev) => [...prev, data.message]);
-    });
-
-    setSocket(_socket);
-
-    return () => {
-      _socket.off("chat:receive");
-      _socket.disconnect();
-      setSocket(undefined);
-    };
-  }, []);
-
   return (
-    <SocketContext.Provider value={{ sendMessage, messages }}>
+    <SocketContext.Provider value={{ sendMessage, messages, connectSocket, disconnectSocket }}>
       {children}
     </SocketContext.Provider>
   );
