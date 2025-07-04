@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import Toast from 'react-native-toast-message';
 
 interface SocketProviderProps {
   children?: React.ReactNode;
@@ -13,6 +14,7 @@ interface ISocketContext {
   disconnectSocket: () => void;
   notifications: { message: string; timestamp: string }[];
   clearNotifications: () => void;
+  connectionStatus: string;
 }
 
 export const SocketContext = React.createContext<ISocketContext | null>(null);
@@ -28,10 +30,43 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket>();
   const [messages, setMessages] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<{ message: string; timestamp: string }[]>([]);
+  const [connectionStatus, setConnectionStatus] = useState<string>('disconnected');
+  const isActiveRef = React.useRef(true); // Track if app is active
 
   const connectSocket = useCallback(() => {
     if (!socket) {
-      const _socket = io(process.env.EXPO_PUBLIC_BASE_URL);
+      const _socket = io(process.env.EXPO_PUBLIC_BASE_URL, {
+        autoConnect: true,
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+      });
+      _socket.on("connect", () => {
+        console.log("[Socket] Connected");
+        setConnectionStatus('connected');
+      });
+      _socket.on("disconnect", (reason) => {
+        console.log("[Socket] Disconnected", reason);
+        setConnectionStatus('disconnected');
+      });
+      _socket.on("reconnect_attempt", (attempt) => {
+        console.log("[Socket] Reconnecting, attempt", attempt);
+        setConnectionStatus('reconnecting');
+      });
+      _socket.on("error", (err) => {
+        console.log("[Socket] Error", err);
+        setConnectionStatus('error');
+        if (Toast && Toast.show) {
+          Toast.show({ type: 'error', text1: 'Socket Error', text2: err?.message || String(err) });
+        }
+      });
+      _socket.on("connect_error", (err) => {
+        console.log("[Socket] Connect Error", err);
+        setConnectionStatus('error');
+        if (Toast && Toast.show) {
+          Toast.show({ type: 'error', text1: 'Socket Connect Error', text2: err?.message || String(err) });
+        }
+      });
       _socket.on("chat:receive", (data) => {
         setMessages((prev) => [...prev, data.message]);
       });
@@ -40,16 +75,31 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
         setNotifications((prev) => [data, ...prev]);
       });
       setSocket(_socket);
+    } else {
+      // If socket exists but is not connected, and app is active, reconnect
+      if (socket && socket.disconnected && isActiveRef.current) {
+        socket.io.opts.autoConnect = true;
+        socket.connect();
+      }
     }
+    isActiveRef.current = true;
   }, [socket]);
 
   const disconnectSocket = useCallback(() => {
     if (socket) {
       socket.off("chat:receive");
       socket.off("message:delivered");
+      socket.off("connect");
+      socket.off("disconnect");
+      socket.off("reconnect_attempt");
+      socket.off("error");
+      // Prevent auto-reconnect when app is backgrounded
+      socket.io.opts.autoConnect = false;
       socket.disconnect();
+      setConnectionStatus('disconnected');
       setSocket(undefined);
     }
+    isActiveRef.current = false;
   }, [socket]);
 
   const sendMessage: ISocketContext["sendMessage"] = useCallback(
@@ -67,7 +117,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   }, []);
 
   return (
-    <SocketContext.Provider value={{ sendMessage, messages, connectSocket, disconnectSocket, notifications, clearNotifications }}>
+    <SocketContext.Provider value={{ sendMessage, messages, connectSocket, disconnectSocket, notifications, clearNotifications, connectionStatus }}>
       {children}
     </SocketContext.Provider>
   );
